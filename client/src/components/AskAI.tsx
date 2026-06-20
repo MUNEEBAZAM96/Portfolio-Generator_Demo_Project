@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sparkles, Zap } from 'lucide-react'
+import { Sparkles, Zap, RotateCcw } from 'lucide-react'
 import { askAI } from '../services/api'
 import Button from './Button'
 import Skeleton from './Skeleton'
@@ -7,6 +7,12 @@ import Skeleton from './Skeleton'
 interface AskAIProps {
   onApply: (header: string, subheader: string) => void
 }
+
+const EXAMPLE_PROMPTS = [
+  'Full-stack engineer, 5yrs React & Node, built SaaS products',
+  'UX designer focused on B2B dashboards and design systems',
+  'Product manager at a startup, previously in consulting',
+]
 
 export default function AskAI({ onApply }: AskAIProps) {
   const [prompt, setPrompt] = useState('')
@@ -38,6 +44,18 @@ export default function AskAI({ onApply }: AskAIProps) {
     onApply(header, subheader)
   }
 
+  const handleReset = () => {
+    setHasResult(false)
+    setHeader('')
+    setSubheader('')
+    setError('')
+    setPrompt('')
+  }
+
+  const handleExample = (example: string) => {
+    setPrompt(example)
+  }
+
   return (
     <div className="ask-ai">
       {/* Header */}
@@ -46,11 +64,22 @@ export default function AskAI({ onApply }: AskAIProps) {
           <Sparkles size={16} />
         </div>
         <div>
-          <h2 className="ask-ai__title">AI Assistant</h2>
+          <h2 className="ask-ai__title">AI Copy Assistant</h2>
         </div>
+        {hasResult && (
+          <button
+            className="ask-ai__reset"
+            onClick={handleReset}
+            aria-label="Start over"
+            title="Start over"
+          >
+            <RotateCcw size={14} />
+          </button>
+        )}
       </div>
+
       <p className="ask-ai__subtitle">
-        Describe yourself and let AI generate professional copy for your portfolio.
+        Describe your background and AI will write professional copy for your portfolio.
       </p>
 
       {/* Prompt */}
@@ -66,7 +95,27 @@ export default function AskAI({ onApply }: AskAIProps) {
           aria-label="AI prompt"
           rows={3}
         />
+
+        {/* Example chips */}
+        {!prompt && (
+          <div className="ask-ai__examples" aria-label="Example prompts">
+            {EXAMPLE_PROMPTS.map((ex) => (
+              <button
+                key={ex}
+                className="ask-ai__example-chip"
+                onClick={() => handleExample(ex)}
+                type="button"
+              >
+                {ex}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="ask-ai__btn-row">
+          <span className="ask-ai__shortcut" aria-label="Keyboard shortcut">
+            <kbd>⌘</kbd> <kbd>↵</kbd> to generate
+          </span>
           <Button
             onClick={handleAsk}
             disabled={loading || !prompt.trim()}
@@ -85,13 +134,13 @@ export default function AskAI({ onApply }: AskAIProps) {
       {loading && (
         <div className="ask-ai__skeleton">
           <div className="ask-ai__skeleton-row">
-            <Skeleton variant="text" width="40%" height={10} />
-            <Skeleton variant="text" width="100%" height={14} />
+            <Skeleton variant="text" width="35%" height={10} />
+            <Skeleton variant="text" width="100%" height={15} />
           </div>
           <div className="ask-ai__skeleton-row">
-            <Skeleton variant="text" width="40%" height={10} />
+            <Skeleton variant="text" width="35%" height={10} />
             <Skeleton variant="text" width="100%" height={14} />
-            <Skeleton variant="text" width="80%" height={14} />
+            <Skeleton variant="text" width="75%" height={14} />
           </div>
         </div>
       )}
@@ -100,7 +149,10 @@ export default function AskAI({ onApply }: AskAIProps) {
       {hasResult && !loading && (
         <div className="ask-ai__result">
           <div className="ask-ai__result-top">
-            <span className="badge">Generated</span>
+            <span className="badge">
+              <Sparkles size={10} style={{ marginRight: 4 }} />
+              Generated
+            </span>
             <Button
               variant="primary"
               size="sm"
@@ -127,10 +179,10 @@ export default function AskAI({ onApply }: AskAIProps) {
       {/* Empty state */}
       {!loading && !hasResult && !error && (
         <div className="ask-ai__empty">
-          <Sparkles className="ask-ai__empty-icon" size={24} />
-          <p>Your AI-generated copy will appear here.</p>
-          <p style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}>
-            Press ⌘ Enter or click "Ask AI" to generate.
+          <Sparkles className="ask-ai__empty-icon" size={22} />
+          <p>AI-generated copy will appear here.</p>
+          <p className="ask-ai__empty-hint">
+            Type your background above and hit <strong>Ask AI</strong>.
           </p>
         </div>
       )}
