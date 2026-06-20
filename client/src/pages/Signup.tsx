@@ -1,10 +1,7 @@
-import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
-import Button from '../components/Button'
-import Input from '../components/Input'
+import { Navigate } from 'react-router-dom'
+import { SignUp, useAuth } from '@clerk/react'
 import Navbar from '../components/Navbar'
-import { useAuth } from '../context/AuthContext'
-import { Sparkles, Zap, Shield, ArrowRight, Star } from 'lucide-react'
+import { Sparkles, Zap, Shield, Star } from 'lucide-react'
 
 const BRAND_FEATURES = [
   { icon: <Sparkles size={14} />, text: 'AI-powered copy generation' },
@@ -14,27 +11,12 @@ const BRAND_FEATURES = [
 ]
 
 export default function Signup() {
-  const navigate = useNavigate()
-  const { signup, isAuthenticated, isLoading } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
+  const { isSignedIn, isLoaded } = useAuth()
 
-  if (isAuthenticated) {
+  if (!isLoaded) return null
+
+  if (isSignedIn) {
     return <Navigate to="/dashboard" replace />
-  }
-
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
-    setError('')
-
-    try {
-      await signup(email, password, confirmPassword)
-      navigate('/dashboard')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Signup failed.')
-    }
   }
 
   return (
@@ -61,72 +43,38 @@ export default function Signup() {
           </div>
         </aside>
 
-        {/* ── Form side ── */}
+        {/* ── Clerk SignUp form ── */}
         <div className="auth-form-side">
-          <main className="auth-card">
-            <div className="auth-card__header">
-              <p className="auth-card__eyebrow">Get started free</p>
-              <h1>Create your account</h1>
-              <p>Start building your portfolio today. It only takes a minute.</p>
-            </div>
-
-            <form className="auth-form" onSubmit={handleSubmit} noValidate>
-              <Input
-                label="Email address"
-                type="email"
-                name="email"
-                id="signup-email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-              <Input
-                label="Password"
-                type="password"
-                name="password"
-                id="signup-password"
-                placeholder="Choose a strong password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-              />
-              <Input
-                label="Confirm password"
-                type="password"
-                name="confirmPassword"
-                id="signup-confirm"
-                placeholder="Repeat your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-              />
-
-              {error && (
-                <p className="form-error" role="alert">
-                  {error}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                fullWidth
-                size="lg"
-                loading={isLoading}
-                rightIcon={<ArrowRight size={16} />}
-              >
-                Create account
-              </Button>
-            </form>
-
-            <p className="auth-card__footer">
-              Already have an account?{' '}
-              <Link to="/login">Log in</Link>
-            </p>
-          </main>
+          <div className="clerk-auth-wrap">
+            <SignUp
+              routing="hash"
+              fallbackRedirectUrl="/dashboard"
+              appearance={{
+                variables: {
+                  colorPrimary: '#6366f1',
+                  colorBackground: '#0d0d10',
+                  colorText: '#f1f1f3',
+                  colorDanger: '#ef4444',
+                  borderRadius: '10px',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  fontSize: '15px',
+                },
+                elements: {
+                  rootBox: 'clerk-root',
+                  card: 'clerk-card',
+                  headerTitle: 'clerk-header-title',
+                  headerSubtitle: 'clerk-header-subtitle',
+                  socialButtonsBlockButton: 'clerk-social-btn',
+                  formButtonPrimary: 'clerk-primary-btn',
+                  footerActionLink: 'clerk-footer-link',
+                  dividerLine: 'clerk-divider',
+                  dividerText: 'clerk-divider-text',
+                  formFieldInput: 'clerk-input',
+                  formFieldLabel: 'clerk-label',
+                },
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

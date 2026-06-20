@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { Show, SignInButton, UserButton } from '@clerk/react'
 import Button from './Button'
-import { LayoutDashboard, LogOut } from 'lucide-react'
+import { LayoutDashboard } from 'lucide-react'
 
 interface NavbarProps {
   variant?: 'landing' | 'app' | 'minimal'
@@ -26,7 +26,11 @@ function LogoIcon() {
         strokeLinejoin="round"
       />
       <defs>
-        <linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="logo-grad"
+          x1="0" y1="0" x2="28" y2="28"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor="#6366f1" />
           <stop offset="1" stopColor="#a78bfa" />
         </linearGradient>
@@ -35,15 +39,14 @@ function LogoIcon() {
   )
 }
 
+const clerkAppearance = {
+  variables: { colorPrimary: '#6366f1' },
+  elements: { avatarBox: 'clerk-user-btn-avatar' },
+}
+
 export default function Navbar({ variant = 'landing' }: NavbarProps) {
-  const { isAuthenticated, logout, user } = useAuth()
   const location = useLocation()
-
   const isActive = (path: string) => location.pathname === path
-
-  const initials = user?.email
-    ? user.email.charAt(0).toUpperCase()
-    : '?'
 
   return (
     <header className={`navbar navbar--${variant}`}>
@@ -54,49 +57,67 @@ export default function Navbar({ variant = 'landing' }: NavbarProps) {
         </Link>
 
         <nav className="navbar__links" aria-label="Main navigation">
+
+          {/* ── Landing nav ── */}
           {variant === 'landing' && (
             <>
-              <Link
-                to="/login"
-                className={`navbar__link ${isActive('/login') ? 'navbar__link--active' : ''}`}
-              >
-                Log in
-              </Link>
-              <Link to="/signup">
-                <Button size="sm">Get started</Button>
-              </Link>
+              <Show when="signed-out">
+                <Link
+                  to="/login"
+                  className={`navbar__link ${isActive('/login') ? 'navbar__link--active' : ''}`}
+                >
+                  Log in
+                </Link>
+                <Link to="/signup">
+                  <Button size="sm">Get started</Button>
+                </Link>
+              </Show>
+              <Show when="signed-in">
+                <Link to="/dashboard" className="navbar__link">
+                  Dashboard
+                </Link>
+                <UserButton appearance={clerkAppearance} />
+              </Show>
             </>
           )}
 
+          {/* ── App nav (dashboard) ── */}
           {variant === 'app' && (
             <>
               <Link
                 to="/dashboard"
                 className={`navbar__link ${isActive('/dashboard') ? 'navbar__link--active' : ''}`}
               >
-                <LayoutDashboard size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                <LayoutDashboard
+                  size={14}
+                  style={{ marginRight: 4, verticalAlign: 'middle' }}
+                />
                 Dashboard
               </Link>
-              <button
-                className="navbar__user"
-                onClick={logout}
-                aria-label={`Logged in as ${user?.email}. Click to log out.`}
-                title="Log out"
-              >
-                <span className="navbar__avatar">{initials}</span>
-                <LogOut size={14} />
-              </button>
+              <UserButton appearance={clerkAppearance} />
             </>
           )}
 
-          {variant === 'minimal' && isAuthenticated && (
-            <Link
-              to="/dashboard"
-              className={`navbar__link ${isActive('/dashboard') ? 'navbar__link--active' : ''}`}
-            >
-              Dashboard
-            </Link>
+          {/* ── Minimal nav (public page / auth pages) ── */}
+          {variant === 'minimal' && (
+            <>
+              <Show when="signed-in">
+                <Link
+                  to="/dashboard"
+                  className={`navbar__link ${isActive('/dashboard') ? 'navbar__link--active' : ''}`}
+                >
+                  Dashboard
+                </Link>
+                <UserButton appearance={clerkAppearance} />
+              </Show>
+              <Show when="signed-out">
+                <SignInButton mode="redirect" fallbackRedirectUrl="/dashboard">
+                  <Button variant="ghost" size="sm">Log in</Button>
+                </SignInButton>
+              </Show>
+            </>
           )}
+
         </nav>
       </div>
     </header>

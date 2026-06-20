@@ -1,38 +1,21 @@
-import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
-import Button from '../components/Button'
-import Input from '../components/Input'
+import { Navigate } from 'react-router-dom'
+import { SignIn, useAuth } from '@clerk/react'
 import Navbar from '../components/Navbar'
-import { useAuth } from '../context/AuthContext'
-import { Sparkles, Zap, Shield, ArrowRight } from 'lucide-react'
+import { Sparkles, Zap, Shield } from 'lucide-react'
 
 const BRAND_FEATURES = [
   { icon: <Sparkles size={14} />, text: 'AI-powered copy generation' },
-  { icon: <Zap size={14} />,       text: 'One-click portfolio deploy' },
-  { icon: <Shield size={14} />,    text: 'Secure & always online' },
+  { icon: <Zap size={14} />,      text: 'One-click portfolio deploy' },
+  { icon: <Shield size={14} />,   text: 'Secure & always online' },
 ]
 
 export default function Login() {
-  const navigate = useNavigate()
-  const { login, isAuthenticated, isLoading } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const { isSignedIn, isLoaded } = useAuth()
 
-  if (isAuthenticated) {
+  if (!isLoaded) return null
+
+  if (isSignedIn) {
     return <Navigate to="/dashboard" replace />
-  }
-
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
-    setError('')
-
-    try {
-      await login(email, password)
-      navigate('/dashboard')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed.')
-    }
   }
 
   return (
@@ -59,61 +42,38 @@ export default function Login() {
           </div>
         </aside>
 
-        {/* ── Form side ── */}
+        {/* ── Clerk SignIn form ── */}
         <div className="auth-form-side">
-          <main className="auth-card">
-            <div className="auth-card__header">
-              <p className="auth-card__eyebrow">Welcome back</p>
-              <h1>Log in to your account</h1>
-              <p>Continue building your portfolio where you left off.</p>
-            </div>
-
-            <form className="auth-form" onSubmit={handleSubmit} noValidate>
-              <Input
-                label="Email address"
-                type="email"
-                name="email"
-                id="login-email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-              <Input
-                label="Password"
-                type="password"
-                name="password"
-                id="login-password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-
-              {error && (
-                <p className="form-error" role="alert">
-                  {error}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                fullWidth
-                size="lg"
-                loading={isLoading}
-                rightIcon={<ArrowRight size={16} />}
-              >
-                Log in
-              </Button>
-            </form>
-
-            <p className="auth-card__footer">
-              Don&apos;t have an account?{' '}
-              <Link to="/signup">Create one for free</Link>
-            </p>
-          </main>
+          <div className="clerk-auth-wrap">
+            <SignIn
+              routing="hash"
+              fallbackRedirectUrl="/dashboard"
+              appearance={{
+                variables: {
+                  colorPrimary: '#6366f1',
+                  colorBackground: '#0d0d10',
+                  colorText: '#f1f1f3',
+                  colorDanger: '#ef4444',
+                  borderRadius: '10px',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  fontSize: '15px',
+                },
+                elements: {
+                  rootBox: 'clerk-root',
+                  card: 'clerk-card',
+                  headerTitle: 'clerk-header-title',
+                  headerSubtitle: 'clerk-header-subtitle',
+                  socialButtonsBlockButton: 'clerk-social-btn',
+                  formButtonPrimary: 'clerk-primary-btn',
+                  footerActionLink: 'clerk-footer-link',
+                  dividerLine: 'clerk-divider',
+                  dividerText: 'clerk-divider-text',
+                  formFieldInput: 'clerk-input',
+                  formFieldLabel: 'clerk-label',
+                },
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -2021,3 +2021,116 @@ textarea {
     max-width: 100%;
   }
 }
+
+/* ─────────────────────────────────────────
+   CLERK AUTH OVERRIDES
+   Match Clerk's hosted components to our dark design system
+───────────────────────────────────────── */
+
+/* Wrap that centres the Clerk card in the auth-form-side panel */
+.clerk-auth-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  animation: slideUp 0.3s ease both;
+}
+
+/* Remove Clerk's default card background/shadow — we let our layout handle it */
+.clerk-card {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Clerk root container */
+.clerk-root {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Form inputs */
+.clerk-input {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  border-radius: var(--radius) !important;
+  transition: border-color var(--t-base), box-shadow var(--t-base) !important;
+}
+
+.clerk-input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+  outline: none !important;
+}
+
+/* Labels */
+.clerk-label {
+  color: var(--text-muted) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+}
+
+/* Primary button (Sign in / Continue) */
+.clerk-primary-btn {
+  background: var(--accent) !important;
+  border-radius: var(--radius) !important;
+  font-weight: 600 !important;
+  transition: background var(--t-base), box-shadow var(--t-base) !important;
+}
+
+.clerk-primary-btn:hover {
+  background: var(--accent-hover) !important;
+  box-shadow: 0 4px 12px var(--accent-glow-strong) !important;
+}
+
+/* Social (Google) button */
+.clerk-social-btn {
+  background: var(--bg-subtle) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  border-radius: var(--radius) !important;
+  font-weight: 500 !important;
+  transition: background var(--t-base), border-color var(--t-base) !important;
+}
+
+.clerk-social-btn:hover {
+  background: var(--bg-muted) !important;
+  border-color: var(--border-hover) !important;
+}
+
+/* Footer link (Switch to sign up) */
+.clerk-footer-link {
+  color: var(--accent-hover) !important;
+  font-weight: 500 !important;
+}
+
+.clerk-footer-link:hover {
+  opacity: 0.8 !important;
+  text-decoration: underline !important;
+}
+
+/* Divider */
+.clerk-divider {
+  background: var(--border) !important;
+}
+
+.clerk-divider-text {
+  color: var(--text-subtle) !important;
+  font-size: 0.75rem !important;
+}
+
+/* UserButton avatar — match our nav size */
+.clerk-user-btn-avatar {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+}
+
+/* Clerk popover (user menu) dark theme */
+.clerk-popover-card {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+}

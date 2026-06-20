@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useUser } from '@clerk/react'
 import AskAI from '../components/AskAI'
 import Button from '../components/Button'
 import Navbar from '../components/Navbar'
 import PortfolioForm from '../components/PortfolioForm'
 import PortfolioPreview from '../components/PortfolioPreview'
 import Toast, { useToast } from '../components/Toast'
-import { useAuth } from '../context/AuthContext'
 import { deployPortfolio, saveDraft } from '../services/api'
 import type { PortfolioFormData } from '../types'
 import { Save, Globe, Link2, CheckCircle } from 'lucide-react'
@@ -19,7 +19,8 @@ const initialForm: PortfolioFormData = {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth()
+  const { user: clerkUser } = useUser()
+  const userEmail = clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.id ?? ''
   const { toasts, addToast, dismissToast } = useToast()
   const [formData, setFormData] = useState<PortfolioFormData>(initialForm)
   const [loading, setLoading] = useState<'draft' | 'deploy' | null>(null)
@@ -72,7 +73,7 @@ export default function Dashboard() {
             <h1>Portfolio Builder</h1>
             <p className="dashboard__welcome">
               <CheckCircle size={13} style={{ color: 'var(--success)' }} />
-              Signed in as <strong>{user?.email}</strong>
+              Signed in as <strong>{userEmail}</strong>
             </p>
           </div>
 
