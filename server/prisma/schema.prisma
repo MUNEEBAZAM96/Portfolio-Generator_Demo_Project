@@ -1,7 +1,19 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// ─────────────────────────────────────────────────────────────────────────────
+// Prisma Schema — Portfolio Generator
+//
+// Design notes:
+//   • BetterAuth owns the auth tables (User, Session, Account, Verification).
+//     We declare them here so Prisma manages migrations, but BetterAuth writes
+//     to them. We never touch them directly.
+//   • Portfolio belongs to User via a required foreign key. Cascade delete
+//     ensures portfolios are cleaned up when a user is deleted.
+//   • pageName is UNIQUE — it becomes the public URL slug (/page/<pageName>).
+//     We store it lowercased + trimmed at the app layer.
+//   • deployed is a boolean defaulting to false. Only deployed=true pages are
+//     publicly accessible. This is the "publish" switch.
+//   • createdAt/updatedAt give us audit history and let the dashboard show
+//     "last updated" without extra queries.
+// ─────────────────────────────────────────────────────────────────────────────
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +22,120 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // NOTE: In Prisma v7, the connection URL is configured in prisma.config.ts
+  // (datasource.url) rather than here. See server/prisma.config.ts.
+}
+
+// ── BetterAuth: core user identity ──────────────────────────────────────────
+// BetterAuth requires this exact shape. We add no custom columns here to keep
+// the auth boundary clean — user profile data lives in Portfolio instead.
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // BetterAuth relations
+  sessions      Session[]
+  accounts      Account[]
+
+  // Our app's relation
+  portfolios    Portfolio[]
+
+  @@map("user")
+}
+
+// ── BetterAuth: sessions (cookie-based, server-managed) ─────────────────────
+// BetterAuth creates a session row on login and deletes it on logout.
+// The sessionToken is what lives in the HttpOnly cookie.
+model Session {
+  id          String   @id @default(cuid())
+  expiresAt   DateTime
+  token       String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ipAddress   String?
+  userAgent   String?
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+// ── BetterAuth: OAuth accounts (Google, GitHub, etc.) ───────────────────────
+// Even if we only use email/password today, BetterAuth creates this table.
+// Having it ready means adding Google OAuth later is a schema-free change.
+model Account {
+  id                String    @id @default(cuid())
+  accountId         String
+  providerId        String
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken       String?
+  refreshToken      String?
+  idToken           String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope             String?
+  password          String?   // hashed password for email/password provider
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("account")
+}
+
+// ── BetterAuth: email verification / password-reset tokens ──────────────────
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+// ── Portfolio — our core business table ─────────────────────────────────────
+//
+// Relationship:  User 1──* Portfolio
+//
+// One user can have multiple portfolios (different slugs), though the UI
+// today shows just one. This future-proofs the schema.
+//
+// Index strategy:
+//   • pageName has a UNIQUE constraint — queries like
+//       SELECT * FROM portfolio WHERE "pageName" = $1 AND deployed = true
+//     will use the unique index on pageName, which is fast even at scale.
+//   • We also index on userId so "load all portfolios for this user" is O(1).
+model Portfolio {
+  id          String   @id @default(cuid())
+
+  // The URL slug — e.g. "jane-doe" → /page/jane-doe
+  // Must be unique across all users. Validated as URL-safe at the API layer.
+  pageName    String   @unique
+
+  // Display fields rendered on the public page
+  name        String
+  header      String
+  subheader   String
+
+  // The publish switch. false = draft (only visible in dashboard).
+  // true  = live   (accessible at /page/<pageName> publicly).
+  deployed    Boolean  @default(false)
+
+  // Audit timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Owner — required FK to User. Cascade delete cleans up portfolios.
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("portfolio")
 }

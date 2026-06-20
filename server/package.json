@@ -1,23 +1,40 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Portfolio Generator API — Express + BetterAuth + Prisma + PostgreSQL",
+  "main": "dist/index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx --watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "db:generate": "prisma generate --config prisma.config.ts",
+    "db:migrate": "prisma migrate dev --config prisma.config.ts",
+    "db:push": "prisma db push --config prisma.config.ts",
+    "db:studio": "prisma studio --config prisma.config.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
+    "@better-auth/prisma-adapter": "*",
     "@prisma/client": "^7.8.0",
+    "better-auth": "*",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "prisma": "^7.8.0"
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^7.8.0",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@types/bcryptjs": "*",
+    "@types/cors": "*",
+    "@types/express": "*",
+    "@types/jsonwebtoken": "*",
+    "nodemon": "^3.1.14",
+    "tsx": "*",
+    "typescript": "*"
   }
 }

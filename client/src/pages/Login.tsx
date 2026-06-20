@@ -9,6 +9,31 @@ const BRAND_FEATURES = [
   { icon: <Shield size={14} />,   text: 'Secure & always online' },
 ]
 
+// Clerk appearance — cast to any to avoid fighting version-specific type constraints
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const clerkAppearance: any = {
+  variables: {
+    colorPrimary: '#6366f1',
+    colorBackground: '#0d0d10',
+    colorText: '#f1f1f3',
+    colorDanger: '#ef4444',
+    borderRadius: '10px',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    fontSize: '15px',
+  },
+  elements: {
+    rootBox: 'clerk-root',
+    card: 'clerk-card',
+    socialButtonsBlockButton: 'clerk-social-btn',
+    formButtonPrimary: 'clerk-primary-btn',
+    footerActionLink: 'clerk-footer-link',
+    dividerLine: 'clerk-divider',
+    dividerText: 'clerk-divider-text',
+    formFieldInput: 'clerk-input',
+    formFieldLabel: 'clerk-label',
+  },
+}
+
 export default function Login() {
   const { isSignedIn, isLoaded } = useAuth()
 
@@ -48,30 +73,7 @@ export default function Login() {
             <SignIn
               routing="hash"
               fallbackRedirectUrl="/dashboard"
-              appearance={{
-                variables: {
-                  colorPrimary: '#6366f1',
-                  colorBackground: '#0d0d10',
-                  colorText: '#f1f1f3',
-                  colorDanger: '#ef4444',
-                  borderRadius: '10px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                  fontSize: '15px',
-                },
-                elements: {
-                  rootBox: 'clerk-root',
-                  card: 'clerk-card',
-                  headerTitle: 'clerk-header-title',
-                  headerSubtitle: 'clerk-header-subtitle',
-                  socialButtonsBlockButton: 'clerk-social-btn',
-                  formButtonPrimary: 'clerk-primary-btn',
-                  footerActionLink: 'clerk-footer-link',
-                  dividerLine: 'clerk-divider',
-                  dividerText: 'clerk-divider-text',
-                  formFieldInput: 'clerk-input',
-                  formFieldLabel: 'clerk-label',
-                },
-              }}
+              appearance={clerkAppearance}
             />
           </div>
         </div>
