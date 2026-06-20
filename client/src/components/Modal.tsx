@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import Button from './Button'
+import { X } from 'lucide-react'
 
 interface ModalProps {
   isOpen: boolean
@@ -9,7 +10,13 @@ interface ModalProps {
   wide?: boolean
 }
 
-export default function Modal({ isOpen, onClose, title, children, wide = false }: ModalProps) {
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  wide = false,
+}: ModalProps) {
   useEffect(() => {
     if (!isOpen) return
 
@@ -29,20 +36,30 @@ export default function Modal({ isOpen, onClose, title, children, wide = false }
   if (!isOpen) return null
 
   return (
-    <div className="modal-overlay" onClick={onClose} role="presentation">
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
       <div
         className={`modal ${wide ? 'modal--wide' : ''}`}
         onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
+        role="document"
       >
         <div className="modal__header">
           <h2 id="modal-title" className="modal__title">
             {title}
           </h2>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close modal">
-            ✕
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            aria-label="Close modal"
+            style={{ padding: '0.3rem', minWidth: 'auto' }}
+          >
+            <X size={16} />
           </Button>
         </div>
         <div className="modal__body">{children}</div>

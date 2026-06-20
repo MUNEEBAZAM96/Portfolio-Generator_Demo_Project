@@ -5,9 +5,11 @@ import Button from '../components/Button'
 import Navbar from '../components/Navbar'
 import PortfolioForm from '../components/PortfolioForm'
 import PortfolioPreview from '../components/PortfolioPreview'
+import Toast, { useToast } from '../components/Toast'
 import { useAuth } from '../context/AuthContext'
 import { deployPortfolio, saveDraft } from '../services/api'
 import type { PortfolioFormData } from '../types'
+import { Save, Globe, Link2, CheckCircle } from 'lucide-react'
 
 const initialForm: PortfolioFormData = {
   pageName: '',
@@ -17,11 +19,11 @@ const initialForm: PortfolioFormData = {
 }
 
 export default function Dashboard() {
-  const { logout, user } = useAuth()
+  const { user } = useAuth()
+  const { toasts, addToast, dismissToast } = useToast()
   const [formData, setFormData] = useState<PortfolioFormData>(initialForm)
-  const [status, setStatus] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState<'draft' | 'deploy' | null>(null)
+  const [deployedSlug, setDeployedSlug] = useState('')
 
   const handleChange = (field: keyof PortfolioFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -29,34 +31,29 @@ export default function Dashboard() {
 
   const handleApplyAI = (header: string, subheader: string) => {
     setFormData((prev) => ({ ...prev, header, subheader }))
-    setStatus('AI copy applied to your form.')
+    addToast('AI copy applied to your form.', 'success')
   }
 
   const handleSaveDraft = async () => {
-    setError('')
-    setStatus('')
     setLoading('draft')
-
     try {
       const portfolio = await saveDraft(formData)
-      setStatus(`Draft saved for /page/${portfolio.pageName}`)
+      addToast(`Draft saved for /page/${portfolio.pageName}`, 'success')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save draft.')
+      addToast(err instanceof Error ? err.message : 'Failed to save draft.', 'error')
     } finally {
       setLoading(null)
     }
   }
 
   const handleDeploy = async () => {
-    setError('')
-    setStatus('')
     setLoading('deploy')
-
     try {
       const portfolio = await deployPortfolio(formData)
-      setStatus(`Deployed! View at /page/${portfolio.pageName}`)
+      setDeployedSlug(portfolio.pageName)
+      addToast(`🚀 Deployed! Live at /page/${portfolio.pageName}`, 'success')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to deploy.')
+      addToast(err instanceof Error ? err.message : 'Failed to deploy.', 'error')
     } finally {
       setLoading(null)
     }
@@ -68,52 +65,85 @@ export default function Dashboard() {
     <div className="page page--dashboard">
       <Navbar variant="app" />
 
-      <main className="dashboard">
-        <header className="dashboard__header">
-          <div>
-            <h1>Dashboard</h1>
-            <p className="dashboard__welcome">Signed in as {user?.email}</p>
+      <div className="dashboard-shell">
+        {/* ── Top header ── */}
+        <header className="dashboard__top">
+          <div className="dashboard__title-block">
+            <h1>Portfolio Builder</h1>
+            <p className="dashboard__welcome">
+              <CheckCircle size={13} style={{ color: 'var(--success)' }} />
+              Signed in as <strong>{user?.email}</strong>
+            </p>
           </div>
+
           <div className="dashboard__actions">
             <Button
               variant="secondary"
+              size="md"
               onClick={handleSaveDraft}
               disabled={loading !== null}
+              loading={loading === 'draft'}
+              leftIcon={<Save size={15} />}
+              id="save-draft-btn"
             >
-              {loading === 'draft' ? 'Saving…' : 'Save Draft'}
+              Save Draft
             </Button>
-            <Button onClick={handleDeploy} disabled={loading !== null}>
-              {loading === 'deploy' ? 'Deploying…' : 'Deploy'}
-            </Button>
-            <Button variant="ghost" onClick={logout}>
-              Log out
+            <Button
+              size="md"
+              onClick={handleDeploy}
+              disabled={loading !== null}
+              loading={loading === 'deploy'}
+              leftIcon={<Globe size={15} />}
+              id="deploy-btn"
+            >
+              Deploy
             </Button>
           </div>
         </header>
 
-        {status && <p className="form-success">{status}</p>}
-        {error && <p className="form-error">{error}</p>}
-
-        {slug && (
-          <p className="dashboard__link">
-            Public URL:{' '}
-            <Link to={`/page/${slug}`} target="_blank">
-              /page/{slug}
+        {/* ── Slug chip ── */}
+        {(slug || deployedSlug) && (
+          <div className="slug-chip" aria-label="Public portfolio URL">
+            <Link2 size={12} aria-hidden="true" />
+            <span>portfoliogen.app/page/</span>
+            <Link
+              to={`/page/${deployedSlug || slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`View live page at /page/${deployedSlug || slug}`}
+            >
+              {deployedSlug || slug}
             </Link>
-          </p>
+            {deployedSlug && (
+              <span className="badge badge--success" style={{ marginLeft: 4 }}>
+                Live
+              </span>
+            )}
+          </div>
         )}
 
+        {/* ── Main grid ── */}
         <div className="dashboard__grid">
-          <section className="dashboard__panel">
+          {/* Left – form */}
+          <section className="dashboard__panel" aria-label="Portfolio form">
             <PortfolioForm data={formData} onChange={handleChange} />
           </section>
 
-          <section className="dashboard__panel dashboard__panel--side">
-            <AskAI onApply={handleApplyAI} />
-            <PortfolioPreview data={formData} />
-          </section>
+          {/* Right – AI + preview (sticky) */}
+          <div className="dashboard__side-stack">
+            <section className="dashboard__panel" aria-label="AI assistant">
+              <AskAI onApply={handleApplyAI} />
+            </section>
+
+            <section className="dashboard__panel" aria-label="Live preview">
+              <PortfolioPreview data={formData} />
+            </section>
+          </div>
         </div>
-      </main>
+      </div>
+
+      {/* ── Toast notifications ── */}
+      <Toast toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }
